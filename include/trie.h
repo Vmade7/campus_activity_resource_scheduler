@@ -1,29 +1,11 @@
 #ifndef TRIE_H
 #define TRIE_H
 
+#include "sqlite_manager.h"
 #include <unordered_map>
 #include <string>
 #include <vector>
 #include <memory>
-
-// Contact结构体 - 联系人信息
-struct Contact {
-    int id;
-    std::string name;
-    std::string student_id;
-    std:: string phone;
-    std::string email;
-    std::string department;
-    
-    Contact(int id, const std::string& name, const std::string& student_id, 
-            const std::string& phone, const std:: string& email, 
-            const std:: string& department = "")
-        : id(id), name(name), student_id(student_id), 
-          phone(phone), email(email), department(department) {}
-    bool operator==(const Contact& other) const {
-        return id == other.id;
-    }
-};
 
 class Trie {
 public:
