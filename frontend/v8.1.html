@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园活动智能调度系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* === 现代化设计变量 === */
+        :root {
+
+            --primary: #F97316;  /* 亮橙色 */
+            --primary-dark: #EA580C;
+            --success: #48bb78;
+            --danger: #f56565;
+            --warning: #ed8936;
+            --info: #4299e1;
+            
+            --gray-50: #f9fafb;
+            --gray-100: #f7fafc;
+            --gray-200: #edf2f7;
+            --gray-300: #e2e8f0;
+            --gray-400: #cbd5e0;
+            --gray-500: #a0aec0;
+            --gray-600: #718096;
+            --gray-700: #4a5568;
+            --gray-800: #2d3748;
+            --gray-900: #1a202c;
+            
+            --white: #ffffff;
+            --black: #000000;
+            
+            /* 德智体美劳颜色 */
+            --de-color: #8b5cf6;  /* 德育 - 紫色 */
+            --zhi-color: #3b82f6; /* 智育 - 蓝色 */
+            --ti-color: #10b981;  /* 体育 - 绿色 */
+            --mei-color: #f59e0b; /* 美育 - 橙色 */
+            --lao-color: #ef4444; /* 劳育 - 红色 */
+            
+            --sidebar-width: 280px;
+            --header-height: 80px;
+            
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow:  0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg:  0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* === 基础重置 === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background:  var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        /* === 登录/注册界面 === */
+        #auth-view {
+            min-height: 100vh;
+            display:  flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #FDBA74 0%, #F97316 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #auth-view::before {
+            content:  '';
+            position:  absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height:  200%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            animation:  float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .auth-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%;
+            max-width:  520px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 10;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity:  1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .auth-header p {
+            color: var(--gray-600);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .auth-tabs {
+            display:  flex;
+            background: var(--gray-100);
+            border-radius: 16px;
+            padding: 6px;
+            margin-bottom: 32px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            color:  var(--gray-600);
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .auth-tab.active {
+            background: var(--white);
+            color:  var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display:  block;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--gray-200);
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            background:  var(--white);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 32px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background:  linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition:  left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left:  100%;
+        }
+
+        .btn-full {
+            width:  100%;
+        }
+
+        .error-message, .success-message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideInDown 0.3s ease;
+        }
+
+        .error-message {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(245, 101, 101, 0.2);
+        }
+
+        .success-message {
+            background:  rgba(72, 187, 120, 0.1);
+            color:  var(--success);
+            border: 1px solid rgba(72, 187, 120, 0.2);
+        }
+
+        /* === 主界面布局 === */
+        #main-view {
+            display:  none;
+            height: 100vh;
+            background: var(--gray-50);
+        }
+
+        .app-layout {
+            display:  flex;
+            height: 100vh;
+        }
+
+        /* === 侧边栏设计 === */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--white);
+            border-right:  1px solid var(--gray-200);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height:  100vh;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-header {
+            padding: 32px 24px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            position: relative;
+        }
+
+        .user-profile {
+            display:  flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar-large {
+            width:  56px;
+            height: 56px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .user-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .user-info p {
+            font-size: 14px;
+            color:  var(--gray-600);
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 24px 16px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+            padding: 16px 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: var(--gray-600);
+            font-weight: 600;
+            font-size: 15px;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: var(--gray-100);
+            color:  var(--gray-800);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            box-shadow: var(--shadow);
+        }
+
+        .nav-item .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-item .nav-badge {
+            position:  absolute;
+            right: 16px;
+            background: var(--danger);
+            color:  var(--white);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .sidebar-footer {
+            padding: 24px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: var(--gray-100);
+            border:  none;
+            border-radius: 12px;
+            color: var(--gray-600);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap:  8px;
+        }
+
+        .logout-btn:hover {
+            background:  var(--danger);
+            color:  var(--white);
+        }
+
+        /* === 主内容区域 === */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .content-header {
+            height: var(--header-height);
+            background:  var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap:  16px;
+        }
+
+        .page-title h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color:  var(--gray-900);
+        }
+
+        .page-title .title-icon {
+            font-size: 32px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .refresh-btn {
+            padding: 12px 20px;
+            background: var(--primary);
+            color:  var(--white);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition:  all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap:  8px;
+        }
+
+        .refresh-btn:hover {
+            background:  var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .content-body {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .activities-grid {
+            display:  grid;
+            grid-template-columns:  repeat(auto-fill, minmax(400px, 1fr));
+            gap: 32px;
+            margin-top: 24px;
+        }
+
+        .activity-card {
+            background: var(--white);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid var(--gray-200);
+        }
+
+        .activity-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .activity-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--de-color), var(--zhi-color), var(--ti-color), var(--mei-color), var(--lao-color));
+        }
+
+        .activity-header {
+            padding: 24px 24px 16px;
+            position: relative;
+        }
+
+        .activity-category {
+            position:  absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .category-de { background: rgba(139, 92, 246, 0.1); color: var(--de-color); }
+        .category-zhi { background: rgba(59, 130, 246, 0.1); color: var(--zhi-color); }
+        .category-ti { background: rgba(16, 185, 129, 0.1); color: var(--ti-color); }
+        .category-mei { background:  rgba(245, 158, 11, 0.1); color: var(--mei-color); }
+        .category-lao { background: rgba(239, 68, 68, 0.1); color: var(--lao-color); }
+
+        .activity-title {
+            font-size: 20px;
+            font-weight: 700;
+            color:  var(--gray-900);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .activity-description {
+            color:  var(--gray-600);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .activity-meta {
+            display:  grid;
+            grid-template-columns: 1fr 1fr;
+            gap:  16px;
+            padding:  0 24px 16px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items:  center;
+            gap: 8px;
+            color: var(--gray-600);
+            font-size:  14px;
+        }
+
+        .meta-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content:  center;
+            background: var(--gray-100);
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .activity-stats {
+            padding: 20px 24px;
+            background: var(--gray-50);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-left {
+            display:  flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap:  6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .activity-status {
+            padding:  6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-upcoming { background: rgba(66, 153, 225, 0.1); color: var(--info); }
+        .status-ongoing { background: rgba(72, 187, 120, 0.1); color: var(--success); }
+        .status-ended { background: rgba(160, 174, 192, 0.1); color: var(--gray-500); }
+
+        .join-btn {
+            padding:  10px 20px;
+            background: linear-gradient(135deg, var(--success), #38a169);
+            color: var(--white);
+            border:  none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor:  pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .join-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .join-btn:disabled {
+            background: var(--gray-300);
+            cursor: not-allowed;
+            transform:  none;
+        }
+
+        /* === 个人中心样式 === */
+        .profile-stats {
+            display:  grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom:  32px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width:  56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size:  24px;
+            color: var(--white);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color:  var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--gray-600);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* === 管理员控制面板 === */
+        .dashboard-grid {
+            display:  grid;
+            grid-template-columns:  repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .dashboard-card {
+            background: var(--white);
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border:  1px solid var(--gray-200);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card::before {
+            content:  '';
+            position:  absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content:  space-between;
+            align-items:  center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color:  var(--gray-700);
+        }
+
+        .card-value {
+            font-size: 36px;
+            font-weight: 800;
+            color:  var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .card-change {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap:  4px;
+        }
+
+        .change-positive { color: var(--success); }
+        .change-negative { color: var(--danger); }
+
+        /* === 资源调度日历 === */
+        .schedule-calendar {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+
+        .calendar-header {
+            padding: 24px;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content:  space-between;
+            align-items:  center;
+        }
+
+        .calendar-title {
+            font-size: 20px;
+            font-weight: 700;
+            color:  var(--gray-900);
+        }
+
+        .calendar-controls {
+            display:  flex;
+            gap: 12px;
+        }
+
+        .calendar-btn {
+            padding: 8px 16px;
+            background: var(--primary);
+            color:  var(--white);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor:  pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-grid {
+            display:  grid;
+            /* Example: 1fr for time column + 7 days * 2 time slots = 15 columns */
+            grid-template-columns:  120px repeat(14, 1fr);
+            gap: 1px;
+            background: var(--gray-200);
+        }
+
+        .calendar-cell {
+            background: var(--white);
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            padding: 4px;
+            text-align: center;
+        }
+        
+        .calendar-cell-content {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .calendar-header-cell {
+            background:  var(--gray-100);
+            color: var(--gray-700);
+            cursor: default;
+            font-size: 14px;
+        }
+
+        .calendar-time-cell {
+            background:  var(--gray-50);
+            color:  var(--gray-600);
+            cursor: default;
+            font-size: 14px;
+        }
+
+        .calendar-available {
+            background:  rgba(72, 187, 120, 0.1);
+        }
+
+        .calendar-available:hover {
+            background: rgba(72, 187, 120, 0.3);
+        }
+
+        .calendar-occupied {
+            background:  rgba(245, 101, 101, 0.1);
+            color: var(--danger);
+        }
+
+        .calendar-occupied:hover {
+            background: rgba(245, 101, 101, 0.3);
+        }
+
+        /* === 筛选器 === */
+        .filters-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: center;
+            padding: 20px 24px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap:  8px;
+        }
+
+        .filter-label {
+            font-size:  14px;
+            font-weight:  600;
+            color: var(--gray-700);
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--white);
+            cursor:  pointer;
+        }
+
+        .create-activity-btn {
+            margin-left: auto;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--success), #38a169);
+            color:  var(--white);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition:  all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap:  8px;
+        }
+
+        /* === 模态框 === */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:  rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content:  center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius:  24px;
+            padding: 32px;
+            width: 90%;
+            max-width:  600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            animation: slideInUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content:  space-between;
+            align-items:  center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-title {
+            font-size:  24px;
+            font-weight:  700;
+            color: var(--gray-900);
+        }
+
+        .close-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            cursor:  pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size:  20px;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background:  var(--gray-200);
+        }
+
+        /* === 通知系统 === */
+        .notification {
+            position: fixed;
+            top:  24px;
+            right: 24px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: var(--white);
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            z-index: 2000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition:  all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--danger); }
+        .notification.warning { background: var(--warning); }
+        .notification.info { background: var(--info); }
+
+        /* === 响应式设计 === */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 110;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .activities-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .dashboard-grid, .profile-stats {
+                grid-template-columns:  1fr;
+            }
+        }
+
+        /* === 空状态 === */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+            color: var(--gray-500);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--gray-800);
+        }
+
+        .empty-description {
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* === 加载动画 === */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin {
+            0% { transform:  rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* === 动画效果 === */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform:  translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation:  fadeIn 0.6s ease-out;
+        }
+
+        .slide-in-up {
+            animation:  slideInUp 0.4s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 登录/注册界面 -->
+    <section id="auth-view">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>🎓 校园智能调度</h1>
+                <p>连接校园生活，智能管理未来</p>
+            </div>
+
+            <!-- 登录/注册标签页 -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">登录</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">注册</button>
+            </div>
+
+            <!-- 错误/成功提示 -->
+            <div id="auth-error" class="error-message"></div>
+            <div id="auth-success" class="success-message"></div>
+
+            <!-- 登录表单 -->
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label">身份角色</label>
+                    <select id="login-role" class="form-select">
+                        <option value="student">学生身份</option>
+                        <option value="admin">管理员身份</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" id="login-username" class="form-input" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" id="login-password" class="form-input" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span></span> 登录
+                </button>
+            </form>
+
+            <!-- 注册表单 -->
+            <form id="register-form" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">身份角色</label>
+                    <select id="register-role" class="form-select">
+                        <option value="student">学生身份</option>
+                        <option value="admin">管理员身份</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" id="register-username" class="form-input" placeholder="请输入用户名（至少3位）" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">真实姓名</label>
+                    <input type="text" id="register-realname" class="form-input" placeholder="请输入真实姓名" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">班级</label>
+                    <input type="text" id="register-class" class="form-input" placeholder="请输入班级" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">学院</label>
+                    <input type="text" id="register-college" class="form-input" placeholder="请输入学院" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">学号</label>
+                    <input type="text" id="register-student-id" class="form-input" placeholder="请输入学号" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">邮箱地址</label>
+                    <input type="email" id="register-email" class="form-input" placeholder="请输入邮箱地址" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" id="register-password" class="form-input" placeholder="请输入密码（至少6位）" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">确认密码</label>
+                    <input type="password" id="register-confirm" class="form-input" placeholder="请再次输入密码" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span></span> 立即注册
+                </button>
+            </form>
+            <div style="text-align: center; margin-top: 24px; font-size: 14px; color: var(--gray-500);">
+                <p>演示账户：admin / admin123 或 student / student123</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 主应用界面 -->
+    <section id="main-view" style="display: none;">
+        <div class="app-layout">
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-profile">
+                        <div class="user-avatar-large" id="user-avatar-large">U</div>
+                        <div class="user-info">
+                            <h3 id="user-display-name">用户姓名</h3>
+                            <p id="user-display-id">ID: 2021001</p>
+                        </div>
+                    </div>
+                </div>
+                <nav class="nav-menu" id="nav-menu">
+                    <!-- 动态生成导航 -->
+                </nav>
+                <div class="sidebar-footer">
+                    <button class="logout-btn" onclick="handleLogout()">
+                        <span></span> 退出登录
+                    </button>
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="main-content">
+                <header class="content-header">
+                    <div class="page-title">
+                        <span class="title-icon" id="page-icon"></span>
+                        <h1 id="page-title-text">活动广场</h1>
+                    </div>
+                    <div class="header-actions">
+                        <button class="refresh-btn" onclick="refreshData()">
+                            <span></span> 刷新数据
+                        </button>
+                    </div>
+                </header>
+
+                <div class="content-body">
+                    <!-- 活动广场（通用） -->
+                    <div id="tab-activities" class="tab-content">
+                        <div class="filters-bar">
+                            <div class="filter-group">
+                                <span class="filter-label">活动分类：</span>
+                                <select id="category-filter" class="filter-select" onchange="filterActivities()">
+                                    <option value="all">全部活动</option>
+                                    <option value="de">德育活动</option>
+                                    <option value="zhi">智育活动</option>
+                                    <option value="ti">体育活动</option>
+                                    <option value="mei">美育活动</option>
+                                    <option value="lao">劳育活动</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <span class="filter-label">活动状态：</span>
+                                <select id="status-filter" class="filter-select" onchange="filterActivities()">
+                                    <option value="all">全部状态</option>
+                                    <option value="upcoming">未开始</option>
+                                    <option value="ongoing">进行中</option>
+                                    <option value="ended">已结束</option>
+                                </select>
+                            </div>
+                            <!-- 管理员专��创建按钮 -->
+                            <button id="create-activity-btn-placeholder" class="create-activity-btn" style="display: none;" onclick="showCreateActivityModal()">
+                                <span>➕</span> 创建活动
+                            </button>
+                        </div>
+                        <div class="activities-grid" id="activities-grid">
+                            <!-- 活动卡片动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 联系人管理 -->
+                    <div id="tab-contacts" class="tab-content" style="display: none;">
+                        <div class="filters-bar">
+                            <div class="filter-group">
+                                <input type="text" id="contact-search" class="form-input" placeholder="基于Trie树前缀搜索联系人姓名、电话或邮箱..." oninput="searchContacts()" style="width: 400px; margin: 0;">
+                            </div>
+                            <button class="create-activity-btn" onclick="showCreateContactModal()">
+                                <span></span> 添加联系人
+                            </button>
+                        </div>
+                        <div class="activities-grid" id="contacts-grid">
+                            <!-- 联系人卡片 -->
+                        </div>
+                    </div>
+
+                    <!-- 个人中心 (学生) -->
+                    <div id="tab-profile" class="tab-content" style="display: none;">
+                        <div class="profile-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon"></div>
+                                <div class="stat-value" id="total-study-hours">0</div>
+                                <div class="stat-label">累计学时</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"></div>
+                                <div class="stat-value" id="total-contacts">0</div>
+                                <div class="stat-label">联系人数量</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"></div>
+                                <div class="stat-value" id="month-activities">0</div>
+                                <div class="stat-label">本月参加活动</div>
+                            </div>
+                        </div>
+                        <h3 style="margin-bottom: 24px; font-size: 20px; font-weight: 700;">我最近的活动</h3>
+                        <div class="activities-grid" id="my-recent-activities">
+                            <!-- 最近活动卡片 -->
+                        </div>
+                    </div>
+
+                    <!-- 控制面板 (管理员) -->
+                    <div id="tab-dashboard" class="tab-content" style="display: none;">
+                        <div class="dashboard-grid">
+                            <div class="dashboard-card">
+                                <div class="card-header">
+                                    <span class="card-title">总活动数量</span>
+                                    <span style="font-size: 24px;"></span>
+                                </div>
+                                <div class="card-value" id="dashboard-total-activities">0</div>
+                                <div class="card-change change-positive">
+                                    <span></span> +0 较上周
+                                </div>
+                            </div>
+                            <div class="dashboard-card">
+                                <div class="card-header">
+                                    <span class="card-title">进行中活动</span>
+                                    <span style="font-size: 24px;">🔄</span>
+                                </div>
+                                <div class="card-value" id="dashboard-ongoing-activities">0</div>
+                                <div class="card-change change-positive">
+                                    <span></span> +0 较昨日
+                                </div>
+                            </div>
+                            <div class="dashboard-card">
+                                <div class="card-header">
+                                    <span class="card-title">资源利用率</span>
+                                    <span style="font-size: 24px;"></span>
+                                </div>
+                                <div class="card-value" id="dashboard-resource-usage">0%</div>
+                                <div class="card-change change-negative">
+                                    <span></span> -0% 较上周
+                                </div>
+                            </div>
+                             <div class="dashboard-card">
+                                <div class="card-header">
+                                    <span class="card-title">总用户数</span>
+                                    <span style="font-size: 24px;"></span>
+                                </div>
+                                <div class="card-value" id="dashboard-total-users">0</div>
+                                <div class="card-change change-positive">
+                                    <span></span> +0 新用户
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 资源调度 (管理员) -->
+                    <div id="tab-schedule" class="tab-content" style="display: none;">
+                        <div class="schedule-calendar">
+                            <div class="calendar-header">
+                                <h3 class="calendar-title">智能资源调度 - 线段树冲突检测可视化</h3>
+                                <div class="calendar-controls">
+                                    <button class="calendar-btn">上一周</button>
+                                    <button class="calendar-btn">本周</button>
+                                    <button class="calendar-btn">下一周</button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid" id="schedule-grid">
+                                <!-- 动态生成调度表格 -->
+                            </div>
+                        </div>
+                        <div style="margin-top: 24px; padding: 20px; background: var(--white); border-radius: 16px; box-shadow: var(--shadow-sm);">
+                            <h4 style="margin-bottom: 12px; font-size: 16px; font-weight: 600;">图例说明</h4>
+                            <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 20px; height: 20px; background: rgba(72, 187, 120, 0.2); border-radius: 4px;"></div>
+                                    <span style="font-size: 14px;">可用时段</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 20px; height: 20px; background: rgba(245, 101, 101, 0.2); border-radius: 4px;"></div>
+                                    <span style="font-size: 14px;">已占用时段</span>
+                                </div>
+                                 <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 20px; height: 20px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 4px;"></div>
+                                    <span style="font-size: 14px;">时间/场地标题</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 创建/编辑活动模态框 -->
+    <div id="create-activity-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="activity-modal-title">创建新活动</h3>
+                <button class="close-btn" onclick="closeModal('create-activity-modal')">&times;</button>
+            </div>
+            <form id="create-activity-form">
+                <input type="hidden" id="activity-id">
+                <div class="form-group">
+                    <label class="form-label">活动名称</label>
+                    <input type="text" id="activity-name" class="form-input" placeholder="请输入活动名称" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">活动描述</label>
+                    <textarea id="activity-description" class="form-input" placeholder="请输入活动描述" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">活动地点</label>
+                    <input type="text" id="activity-location" class="form-input" placeholder="请输入活动地点" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">开始时间</label>
+                        <input type="datetime-local" id="activity-start" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">结束时间</label>
+                        <input type="datetime-local" id="activity-end" class="form-input" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">最大参与人数</label>
+                        <input type="number" id="activity-max-participants" class="form-input" placeholder="50" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">活动类别</label>
+                        <select id="activity-category" class="form-select" required>
+                            <option value="de">德育活动</option>
+                            <option value="zhi">智育活动</option>
+                            <option value="ti">体育活动</option>
+                            <option value="mei">美育活动</option>
+                            <option value="lao">劳育活动</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--gray-200);">
+                    <button type="button" class="btn" style="background: var(--gray-100); color: var(--gray-700);" onclick="closeModal('create-activity-modal')">取消</button>
+                    <button type="submit" class="btn btn-primary" id="activity-submit-btn">
+                        <span></span> 创建活动
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 创建联系人模态框 -->
+    <div id="create-contact-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">添加联系人</h3>
+                <button class="close-btn" onclick="closeModal('create-contact-modal')">&times;</button>
+            </div>
+            <form id="create-contact-form">
+                <div class="form-group">
+                    <label class="form-label">姓名</label>
+                    <input type="text" id="contact-name" class="form-input" placeholder="请输入姓名" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">电话</label>
+                    <input type="tel" id="contact-phone" class="form-input" placeholder="请输入电话号码" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" id="contact-email" class="form-input" placeholder="请输入邮箱地址" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">部门/学院</label>
+                    <input type="text" id="contact-department" class="form-input" placeholder="请输入部门或学院">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">学号（可选）</label>
+                    <input type="text" id="contact-student-id" class="form-input" placeholder="如果是学生，请输入学号">
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--gray-200);">
+                    <button type="button" class="btn" style="background: var(--gray-100); color: var(--gray-700);" onclick="closeModal('create-contact-modal')">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span></span> 添加联系人
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 活动详情模态框 -->
+    <div id="activity-detail-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="detail-activity-title">活动详情</h3>
+                <button class="close-btn" onclick="closeModal('activity-detail-modal')">&times;</button>
+            </div>
+            <div id="activity-detail-content">
+                <!-- 活动详情内容动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 通知容器 -->
+    <div id="notification-container" style="position: fixed; top: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 12px;"></div>
+
+
+    <script>
+        console.log(' 校园活动智能调度系统 初始化...');
+        
+        // --- 全局状态和变量 ---
+        const API_BASE = 'http://localhost:8080';
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let allActivities = []; // 全局活动缓存
+        let allContacts = [];   // 全局联系人缓存
+        
+        // --- API请求封装函数 ---
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            
+            const defaultHeaders = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (authToken) {
+                defaultHeaders['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            const config = {
+                method: 'GET',
+                headers: defaultHeaders,
+                ...options,
+                headers: { ...defaultHeaders, ...options.headers }
+            };
+            
+            if (options.body && typeof options.body === 'object') {
+                config.body = JSON.stringify(options.body);
+            }
+            
+            try {
+                const response = await fetch(url, config);
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        data = text;
+                    }
+                }
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        handleLogout();
+                        throw new Error('登录已过期，请重新登录');
+                    }
+                    throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('API请求错误:', error);
+                showNotification('网络错误: ' + error.message, 'error');
+                throw error;
+            }
+        }
+        
+        // --- 导航栏定义 ---
+        const navConfig = {
+            student: [
+                { id: 'activities', name: '活动广场', icon: '' },
+                { id: 'contacts', name: '联系人管理', icon: '' },
+                { id: 'profile', name: '个人中心', icon: '' }
+            ],
+            admin: [
+                { id: 'dashboard', name: '控制面板', icon: '' },
+                { id: 'activities', name: '活动管理', icon: '' },
+                { id: 'schedule', name: '资源调度', icon: '' },
+                { id: 'contacts', name: '联系人管理', icon: '' }
+            ]
+        };
+
+        // --- 页面加载入口 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM加载完成，开始初始化应用');
+            bindFormEvents();
+            if (currentUser && authToken) {
+                console.log(`检测到已登录用户: ${currentUser.username} (角色: ${currentUser.role})`);
+                showMainView();
+            } else {
+                console.log('未检测到登录状态，显示认证页面');
+                showAuthView();
+            }
+        });
+
+        // --- 视图切换 ---
+        function showAuthView() {
+            document.getElementById('auth-view').style.display = 'flex';
+            document.getElementById('main-view').style.display = 'none';
+        }
+
+        function showMainView() {
+            document.getElementById('auth-view').style.display = 'none';
+            document.getElementById('main-view').style.display = 'block';
+            setupMainInterface();
+        }
+        
+        function switchAuthTab(tab) {
+            document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+            document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+            document.querySelector('.auth-tab.active').classList.remove('active');
+            document.querySelector(`.auth-tab[onclick="switchAuthTab('${tab}')"]`).classList.add('active');
+            clearMessages();
+        }
+        
+        // --- 主界面设置 ---
+        function setupMainInterface() {
+            if (!currentUser) return;
+            // 1. 设置用户信息
+            const user = currentUser;
+            document.getElementById('user-display-name').textContent = user.realName || user.username;
+            document.getElementById('user-avatar-large').textContent = (user.realName || user.username).charAt(0).toUpperCase();
+            document.getElementById('user-display-id').textContent = user.role === 'student' ? `学号: ${user.studentId}` : `角色: 管理员`;
+
+            // 2. 生成导航栏
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            const userNav = navConfig[user.role] || [];
+            userNav.forEach(item => {
+                const navItem = document.createElement('div');
+                navItem.className = 'nav-item';
+                navItem.dataset.tab = `tab-${item.id}`;
+                navItem.innerHTML = `<span class="nav-icon">${item.icon}</span> ${item.name}`;
+                navItem.onclick = () => switchTab(item.id, item.name, item.icon);
+                navMenu.appendChild(navItem);
+            });
+            
+            // 3. 根据角色调整UI
+            const createBtn = document.getElementById('create-activity-btn-placeholder');
+            if (user.role === 'admin') {
+                createBtn.style.display = 'flex';
+            } else {
+                createBtn.style.display = 'none';
+            }
+            
+            // 4. 设置默认标签页并加载数据
+            const defaultTab = userNav[0];
+            if (defaultTab) {
+                switchTab(defaultTab.id, defaultTab.name, defaultTab.icon);
+            }
+        }
+        
+        function switchTab(tabId, tabName, tabIcon) {
+            console.log(`切换到标签页: ${tabName}`);
+            // 隐藏所有内容
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            
+            // 显示目标内容
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+                document.getElementById('page-title-text').textContent = tabName;
+                document.getElementById('page-icon').textContent = tabIcon;
+                
+                // 激活导航项
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.tab === `tab-${tabId}`);
+                });
+                
+                // 按需加载数据
+                loadDataForTab(tabId);
+            }
+        }
+        
+        async function loadDataForTab(tabId) {
+            showLoadingSpinnerForTab(tabId, true);
+            try {
+                switch(tabId) {
+                    case 'activities':
+                        await fetchAllActivities();
+                        break;
+                    case 'contacts':
+                        await fetchAllContacts();
+                        break;
+                    case 'profile':
+                        await Promise.all([fetchAllActivities(), fetchAllContacts()]);
+                        renderProfileData();
+                        break;
+                    case 'dashboard':
+                        await fetchAllActivities(); // 假设仪表盘需要活动数据
+                        renderDashboardData();
+                        break;
+                    case 'schedule':
+                        renderScheduleGrid();
+                        break;
+                }
+            } catch (error) {
+                console.error(`加载 ${tabId} 数据失败:`, error);
+                showNotification(`加载${tabId}数据失败`, 'error');
+            } finally {
+                showLoadingSpinnerForTab(tabId, false);
+            }
+        }
+        
+        function refreshData() {
+            const activeTab = document.querySelector('.nav-item.active');
+            if (activeTab) {
+                const tabId = activeTab.dataset.tab.replace('tab-', '');
+                showNotification('正在刷新数据...', 'info');
+                loadDataForTab(tabId);
+            }
+        }
+        
+        // --- 数据获取与渲染 (模拟API) ---
+        async function mockApiCall(data, delay = 500) {
+            return new Promise(resolve => setTimeout(() => resolve(data), delay));
+        }
+
+        async function fetchAllActivities() {
+            console.log("Fetching all activities...");
+            try {
+                const activities = await apiRequest('/api/activities');
+                if (Array.isArray(activities)) {
+                    // 转换API数据格式到前端需要的格式
+                    allActivities = activities.map(a => ({
+                        id: a.id,
+                        name: a.name,
+                        description: a.description || '',
+                        location: a.location,
+                        start: a.start_time,
+                        end: a.end_time,
+                        maxParticipants: a.max_participants || 0,
+                        participants: a.current_participants || 0,
+                        category: mapCategoryToFrontend(a.category),
+                        creator: a.created_by || '系统'
+                    }));
+                } else {
+                    console.warn('Activities API返回格式异常，使用模拟数据');
+                    allActivities = [];
+                }
+                console.log("Activities fetched:", allActivities);
+                filterActivities(); // 获取后立即渲染
+            } catch (error) {
+                console.error('获取活动失败，使用模拟数据:', error);
+                // 使用模拟数据作为后备
+                const mockActivities = [
+                    { id: 1, name: '春季校园马拉松', description: '环绕校园，跑出青春风采，快来报名吧！', location: '学校操场', start: '2026-03-15T08:00', end: '2026-03-15T11:00', maxParticipants: 200, participants: 152, category: 'ti', creator: '体育部' },
+                    { id: 2, name: 'AI技术与未来世界讲座', description: '探索人工智能的前沿发展与应用。', location: '图书馆报告厅', start: '2026-03-20T19:00', end: '2026-03-20T21:00', maxParticipants: 100, participants: 100, category: 'zhi', creator: '计算机学院' }
+                ];
+                allActivities = mockActivities;
+                filterActivities();
+            }
+        }
+        
+        function mapCategoryToFrontend(category) {
+            const map = {
+                'academic': 'zhi',
+                'sports': 'ti',
+                'cultural': 'mei',
+                'volunteer': 'de',
+                'moral': 'de'
+            };
+            return map[category] || 'de';
+        }
+
+        async function fetchAllContacts() {
+            console.log("Fetching all contacts...");
+            try {
+                const contacts = await apiRequest('/api/contacts');
+                if (Array.isArray(contacts)) {
+                    allContacts = contacts.map(c => ({
+                        id: c.id,
+                        name: c.name,
+                        phone: c.phone || '',
+                        email: c.email || '',
+                        department: c.department || '',
+                        studentId: c.student_id || null
+                    }));
+                } else {
+                    console.warn('Contacts API返回格式异常，使用模拟数据');
+                    allContacts = [];
+                }
+                console.log("Contacts fetched:", allContacts);
+                renderContacts(allContacts);
+            } catch (error) {
+                console.error('获取联系人失败，使用模拟数据:', error);
+                // 使用模拟数据作为后备
+                const mockContacts = [
+                    { id: 1, name: '王老师', phone: '13800138000', email: 'wang.laoshi@example.com', department: '计算机学院' },
+                    { id: 2, name: '李同学', phone: '13912345678', email: 'li.同学@example.com', department: '软件工程2021级', studentId: '2021002' }
+                ];
+                allContacts = mockContacts;
+                renderContacts(allContacts);
+            }
+        }
+        
+        function filterActivities() {
+            const category = document.getElementById('category-filter').value;
+            const status = document.getElementById('status-filter').value;
+            const filtered = allActivities.filter(activity => {
+                const categoryMatch = category === 'all' || activity.category === category;
+                const statusMatch = status === 'all' || getActivityStatus(activity).key === status;
+                return categoryMatch && statusMatch;
+            });
+            renderActivities(filtered);
+        }
+        
+        // --- 渲染逻辑 ---
+        function renderActivities(activities) {
+            const grid = document.getElementById('activities-grid');
+            grid.innerHTML = '';
+            if (activities.length === 0) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-icon"></div>
+                    <div class="empty-title">没有找到相关活动</div>
+                    <div class="empty-description">尝试更换筛选条件，或等待新的活动发布。</div>
+                </div>`;
+                return;
+            }
+            activities.forEach(activity => {
+                grid.appendChild(createActivityCard(activity));
+            });
+        }
+        
+        function createActivityCard(activity) {
+            const card = document.createElement('div');
+            card.className = 'activity-card';
+            card.onclick = () => showActivityDetailModal(activity.id);
+
+            const status = getActivityStatus(activity);
+            const categoryMap = { de: '德育', zhi: '智育', ti: '体育', mei: '美育', lao: '劳育' };
+            const isFull = activity.participants >= activity.maxParticipants;
+
+            card.innerHTML = `
+                <div class="activity-header">
+                    <span class="activity-category category-${activity.category}">${categoryMap[activity.category]}</span>
+                    <h3 class="activity-title">${activity.name}</h3>
+                    <p class="activity-description">${activity.description.substring(0, 40)}...</p>
+                </div>
+                <div class="activity-meta">
+                    <div class="meta-item"><span class="meta-icon">📍</span> ${activity.location}</div>
+                    <div class="meta-item"><span class="meta-icon">🕒</span> ${formatDateTime(activity.start)}</div>
+                </div>
+                <div class="activity-stats">
+                    <div class="stats-left">
+                        <div class="stat-item">
+                            <span class="activity-status ${status.class}">${status.text}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>👥</span> ${activity.participants} / ${activity.maxParticipants}
+                        </div>
+                    </div>
+                    ${currentUser.role === 'student' ? `
+                    <button class="join-btn" onclick="event.stopPropagation(); handleJoinActivity(${activity.id})" ${status.key !== 'upcoming' || isFull ? 'disabled' : ''}>
+                        ${status.key === 'upcoming' ? (isFull ? '已满员' : '报名') : '已结束'}
+                    </button>
+                    ` : `
+                    <button class="join-btn" style="background: var(--info)" onclick="event.stopPropagation(); showCreateActivityModal(${activity.id})">
+                        编辑
+                    </button>
+                    `}
+                </div>
+            `;
+            return card;
+        }
+
+        function renderContacts(contacts) {
+            const grid = document.getElementById('contacts-grid');
+            grid.innerHTML = '';
+             if (contacts.length === 0) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-icon"></div>
+                    <div class="empty-title">没有联系人</div>
+                    <div class="empty-description">点击右上角“添加联系人”来创建你的第一个联系人吧。</div>
+                </div>`;
+                return;
+            }
+            // Using activity card style for contacts for consistency
+            contacts.forEach(contact => {
+                const card = document.createElement('div');
+                card.className = 'activity-card';
+                card.style.cursor = 'default';
+                card.innerHTML = `
+                    <div class="activity-header">
+                        <h3 class="activity-title">${contact.name}</h3>
+                        <p class="activity-description">${contact.department || '无部门信息'}</p>
+                    </div>
+                    <div class="activity-meta">
+                        <div class="meta-item"><span class="meta-icon">📞</span> ${contact.phone}</div>
+                        <div class="meta-item"><span class="meta-icon">✉️</span> ${contact.email}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        function renderProfileData() {
+            // Mock data, replace with real data
+            document.getElementById('total-study-hours').textContent = '35.5';
+            document.getElementById('total-contacts').textContent = allContacts.length;
+            document.getElementById('month-activities').textContent = '3';
+            
+            const myActivitiesGrid = document.getElementById('my-recent-activities');
+            myActivitiesGrid.innerHTML = '';
+            // Assuming first 3 activities are "mine"
+            const myActivities = allActivities.slice(0, 3);
+            if(myActivities.length === 0){
+                myActivitiesGrid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; padding: 20px;">
+                    <div class="empty-icon"></div>
+                    <div class="empty-title">还没有参加活动</div>
+                    <div class="empty-description">快去活动广场看看有什么感兴趣的活动吧！</div>
+                </div>`;
+                return;
+            }
+            myActivities.forEach(activity => {
+                 myActivitiesGrid.appendChild(createActivityCard(activity));
+            });
+        }
+        
+        function renderDashboardData() {
+            const ongoing = allActivities.filter(a => getActivityStatus(a).key === 'ongoing').length;
+            document.getElementById('dashboard-total-activities').textContent = allActivities.length;
+            document.getElementById('dashboard-ongoing-activities').textContent = ongoing;
+            document.getElementById('dashboard-resource-usage').textContent = '68%'; // Mock
+            document.getElementById('dashboard-total-users').textContent = '158'; // Mock
+        }
+        
+        function renderScheduleGrid() {
+            const grid = document.getElementById('schedule-grid');
+            grid.innerHTML = '';
+            const locations = ['主教学楼A101', '图书馆报告厅', '体育馆篮球场', '艺术中心琴房'];
+            const timeSlots = ['08:00-10:00', '10:00-12:00', '14:00-16:00', '16:00-18:00', '19:00-21:00'];
+            const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            
+            grid.style.gridTemplateColumns = `120px repeat(${days.length}, 1fr)`;
+
+            // Header row (days)
+            grid.appendChild(document.createElement('div')); // Empty corner
+            days.forEach(day => {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-cell calendar-header-cell';
+                dayCell.textContent = day;
+                grid.appendChild(dayCell);
+            });
+
+            // Data rows
+            locations.forEach(location => {
+                const locationCell = document.createElement('div');
+                locationCell.className = 'calendar-cell calendar-time-cell';
+                locationCell.textContent = location;
+                grid.appendChild(locationCell);
+                
+                days.forEach(day => {
+                    const cell = document.createElement('div');
+                    // Mock conflict detection
+                    const isOccupied = Math.random() > 0.7;
+                    cell.className = `calendar-cell ${isOccupied ? 'calendar-occupied' : 'calendar-available'}`;
+                    cell.innerHTML = `<div class="calendar-cell-content">${isOccupied ? '已占用' : '可用'}</div>`;
+                    cell.title = `${location} - ${day} - ${isOccupied ? '点击查看详情' : '点击预定'}`;
+                    grid.appendChild(cell);
+                });
+            });
+        }
+        
+        // --- 事件处理 ---
+        function bindFormEvents() {
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            document.getElementById('create-activity-form').addEventListener('submit', handleCreateActivity);
+            document.getElementById('create-contact-form').addEventListener('submit', handleCreateContact);
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            clearMessages();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            // Simple validation
+            if (!username || !password) {
+                return showError("请输入用户名和密码");
+            }
+            if (password.length < 6) {
+                return showError("密码至少需要6位");
+            }
+            
+            try {
+                showNotification('正在登录...', 'info');
+                const response = await apiRequest('/api/auth/login', {
+                    method: 'POST',
+                    body: { username, password }
+                });
+
+                if (response.token) {
+                    authToken = response.token;
+                    localStorage.setItem('authToken', authToken);
+                }
+                
+                if (response.user) {
+                    currentUser = {
+                        username: response.user.username,
+                        role: response.user.role,
+                        realName: response.user.real_name || response.user.username,
+                        studentId: response.user.student_id || null,
+                        email: response.user.email,
+                        department: response.user.department
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                } else {
+                    throw new Error('登录响应中缺少用户信息');
+                }
+
+                showSuccess("登录成功！正在跳转...");
+                setTimeout(showMainView, 1000);
+            } catch (error) {
+                showError("登录失败: " + error.message);
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            clearMessages();
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+            if (password !== confirm) { return showError("两次输入的密码不一��！"); }
+            
+            showSuccess("注册成功！请使用新账户登录。");
+            setTimeout(() => switchAuthTab('login'), 1500);
+        }
+        
+        async function handleCreateActivity(e) {
+            e.preventDefault();
+            const form = e.target;
+            const activityId = document.getElementById('activity-id').value;
+            const isEditing = !!activityId;
+            
+            const name = document.getElementById('activity-name').value;
+            const location = document.getElementById('activity-location').value;
+            const start = document.getElementById('activity-start').value;
+            const end = document.getElementById('activity-end').value;
+            const maxParticipants = parseInt(document.getElementById('activity-max').value) || 0;
+            const category = document.getElementById('activity-category').value;
+            const description = document.getElementById('activity-description').value || '';
+            
+            if (!name || !location || !start || !end) {
+                return showNotification('请填写所有必填字段', 'error');
+            }
+            
+            try {
+                showNotification('正在保存活动...', 'info');
+                const activityData = {
+                    name,
+                    location,
+                    start_time: start + ':00Z',
+                    end_time: end + ':00Z',
+                    max_participants: maxParticipants,
+                    category: mapCategoryToBackend(category),
+                    description
+                };
+                
+                if (isEditing) {
+                    // TODO: 实现更新API
+                    showNotification('更新功能待实现', 'warning');
+                } else {
+                    await apiRequest('/api/activities', {
+                        method: 'POST',
+                        body: activityData
+                    });
+                    showNotification(`活动已成功创建！`, 'success');
+                }
+                
+                closeModal('create-activity-modal');
+                await fetchAllActivities(); // Refresh list
+            } catch (error) {
+                showNotification('保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        function mapCategoryToBackend(category) {
+            const map = {
+                'zhi': 'academic',
+                'ti': 'sports',
+                'mei': 'cultural',
+                'de': 'moral',
+                'lao': 'volunteer'
+            };
+            return map[category] || 'academic';
+        }
+
+        async function handleCreateContact(e) {
+            e.preventDefault();
+            const form = e.target;
+            
+            const name = document.getElementById('contact-name').value;
+            const phone = document.getElementById('contact-phone').value;
+            const email = document.getElementById('contact-email').value;
+            const department = document.getElementById('contact-department').value || '';
+            
+            if (!name || !phone || !email) {
+                return showNotification('请填写所有必填字段', 'error');
+            }
+            
+            try {
+                showNotification('正在保存联系人...', 'info');
+                await apiRequest('/api/contacts', {
+                    method: 'POST',
+                    body: { name, phone, email, department }
+                });
+                
+                showNotification('联系人已成功添加！', 'success');
+                closeModal('create-contact-modal');
+                await fetchAllContacts(); // Refresh list
+            } catch (error) {
+                showNotification('保存失败: ' + error.message, 'error');
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            authToken = null;
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('authToken');
+            showNotification('您已成功退出登录。', 'info');
+            setTimeout(showAuthView, 1000);
+        }
+
+        function handleJoinActivity(activityId) {
+            showNotification(`成功报名活动！`, 'success');
+            // Here you would make an API call to join
+            // For mock, let's just update the UI
+            const activity = allActivities.find(a => a.id === activityId);
+            if (activity) {
+                activity.participants++;
+                filterActivities();
+            }
+        }
+        
+        function searchContacts() {
+            const query = document.getElementById('contact-search').value.toLowerCase();
+            const filtered = allContacts.filter(c => 
+                c.name.toLowerCase().includes(query) || 
+                c.phone.includes(query) || 
+                c.email.toLowerCase().includes(query)
+            );
+            renderContacts(filtered);
+        }
+        
+        // --- 模态框控制 ---
+        function showCreateActivityModal(activityId = null) {
+            const form = document.getElementById('create-activity-form');
+            form.reset();
+            const modalTitle = document.getElementById('activity-modal-title');
+            const submitBtn = document.getElementById('activity-submit-btn');
+
+            if (activityId) {
+                const activity = allActivities.find(a => a.id === activityId);
+                if (activity) {
+                    modalTitle.textContent = '编辑活动';
+                    submitBtn.innerHTML = '<span></span> 保存更改';
+                    document.getElementById('activity-id').value = activity.id;
+                    document.getElementById('activity-name').value = activity.name;
+                    document.getElementById('activity-description').value = activity.description;
+                    document.getElementById('activity-location').value = activity.location;
+                    document.getElementById('activity-start').value = activity.start;
+                    document.getElementById('activity-end').value = activity.end;
+                    document.getElementById('activity-max-participants').value = activity.maxParticipants;
+                    document.getElementById('activity-category').value = activity.category;
+                }
+            } else {
+                 modalTitle.textContent = '创建新活动';
+                 submitBtn.innerHTML = '<span></span> 创建活动';
+                 document.getElementById('activity-id').value = '';
+            }
+
+            document.getElementById('create-activity-modal').style.display = 'flex';
+        }
+
+        function showActivityDetailModal(activityId) {
+            const activity = allActivities.find(a => a.id === activityId);
+            if (!activity) return;
+
+            document.getElementById('detail-activity-title').textContent = activity.name;
+            const content = document.getElementById('activity-detail-content');
+            const status = getActivityStatus(activity);
+            
+            content.innerHTML = `
+                <p style="color: var(--gray-600); font-size: 16px; margin-bottom: 24px;">${activity.description}</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div><strong> 地点:</strong> ${activity.location}</div>
+                    <div><strong> 类别:</strong> ${document.querySelector(`#activity-category option[value=${activity.category}]`).textContent}</div>
+                    <div><strong> 开始时间:</strong> ${formatDateTime(activity.start, true)}</div>
+                    <div><strong> 结束时间:</strong> ${formatDateTime(activity.end, true)}</div>
+                    <div><strong> 参与人数:</strong> ${activity.participants} / ${activity.maxParticipants}</div>
+                    <div><strong> 创建者:</strong> ${activity.creator}</div>
+                    <div><strong> 状态:</strong> <span class="activity-status ${status.class}" style="font-size: 14px; padding: 6px 10px;">${status.text}</span></div>
+                </div>
+            `;
+            document.getElementById('activity-detail-modal').style.display = 'flex';
+        }
+
+        function showCreateContactModal() {
+            document.getElementById('create-contact-form').reset();
+            document.getElementById('create-contact-modal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // --- UI辅助函数 ---
+        function showError(message) {
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('auth-success');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        function clearMessages() {
+            document.getElementById('auth-error').style.display = 'none';
+            document.getElementById('auth-success').style.display = 'none';
+        }
+        
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.textContent = message;
+            container.appendChild(notif);
+            
+            // Trigger animation
+            setTimeout(() => notif.classList.add('show'), 10);
+            
+            // Auto-hide
+            setTimeout(() => {
+                notif.classList.remove('show');
+                notif.addEventListener('transitionend', () => notif.remove());
+            }, 3000);
+        }
+
+        function showLoadingSpinnerForTab(tabId, show) {
+            const tabContent = document.getElementById(`tab-${tabId}`);
+            if (!tabContent) return;
+
+            let spinner = tabContent.querySelector('.loading-spinner');
+            if (show) {
+                if (!spinner) {
+                    spinner = document.createElement('div');
+                    spinner.className = 'loading-spinner';
+                    // Clear content and show spinner
+                    const grid = tabContent.querySelector('.activities-grid, .dashboard-grid, .profile-stats, .schedule-grid');
+                    if (grid) grid.innerHTML = '';
+                    if (tabId === 'profile') {
+                         document.getElementById('my-recent-activities').innerHTML = '';
+                    }
+                    tabContent.appendChild(spinner);
+                }
+            } else {
+                if (spinner) {
+                    spinner.remove();
+                }
+            }
+        }
+
+        // --- 工具函数 ---
+        function getActivityStatus(activity) {
+            const now = new Date();
+            const start = new Date(activity.start);
+            const end = new Date(activity.end);
+
+            if (now < start) {
+                return { key: 'upcoming', text: '未开始', class: 'status-upcoming' };
+            } else if (now >= start && now <= end) {
+                return { key: 'ongoing', text: '进行中', class: 'status-ongoing' };
+            } else {
+                return { key: 'ended', text: '已结束', class: 'status-ended' };
+            }
+        }
+        
+        function formatDateTime(isoString, withSeconds = false) {
+            const date = new Date(isoString);
+            const options = {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit',
+                hour12: false
+            };
+            if(withSeconds) options.second = '2-digit';
+            return date.toLocaleString('zh-CN', options).replace(/\//g, '-');
+        }
+
+    </script>
+</body>
+</html>
