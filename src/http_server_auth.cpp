@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <regex>
+#include <memory>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -43,7 +44,7 @@ bool AuthMiddleware::authorize(const AuthenticatedRequest& request, UserRole req
     }
     
     // 管理员拥有所有权限
-    if (request.current_user->role == UserRole:: ADMIN) {
+    if (request.current_user->role == UserRole::ADMIN) {
         return true;
     }
     
@@ -52,7 +53,7 @@ bool AuthMiddleware::authorize(const AuthenticatedRequest& request, UserRole req
 }
 
 std::string AuthMiddleware::extractToken(const HttpRequest& request) {
-    auto auth_header = request. headers.find("Authorization");
+    auto auth_header = request.headers.find("Authorization");
     if (auth_header == request.headers.end()) {
         return "";
     }
@@ -69,21 +70,21 @@ std::string AuthMiddleware::extractToken(const HttpRequest& request) {
 
 HttpResponse AuthRoutes::handleLogin(const HttpRequest& request) {
     if (request.method != "POST") {
-        HttpResponse response(405, "Method Not Allowed");
-        response.setJson(buildErrorResponse("Only POST method allowed"));
+        HttpResponse response;
+        response.setError(405, "Only POST method allowed");
         return response;
     }
     
-    // 解析请求体中的用户名和密码
-    std::regex username_regex(R"("username"\s*:\s*"([^"]+)")");
-    std::regex password_regex(R"("password"\s*:\s*"([^"]+)")");
+    // 解析请求体中的用户名和密码（使用自定义原始字符串分隔符避免 )" 终止问题）
+    std::regex username_regex(R"REGEX("username"\s*:\s*"([^"]+)")REGEX");
+    std::regex password_regex(R"REGEX("password"\s*:\s*"([^"]+)")REGEX");
     
     std::smatch username_match, password_match;
     
-    if (! std::regex_search(request.body, username_match, username_regex) ||
-        !std:: regex_search(request.body, password_match, password_regex)) {
-        HttpResponse response(400, "Bad Request");
-        response.setJson(buildErrorResponse("Missing username or password"));
+    if (!std::regex_search(request.body, username_match, username_regex) ||
+        !std::regex_search(request.body, password_match, password_regex)) {
+        HttpResponse response;
+        response.setError(400, "Missing username or password");
         return response;
     }
     
@@ -93,16 +94,16 @@ HttpResponse AuthRoutes::handleLogin(const HttpRequest& request) {
     // 验证用户
     std::string token = auth_manager->authenticate(username, password);
     if (token.empty()) {
-        HttpResponse response(401, "Unauthorized");
-        response.setJson(buildErrorResponse("Invalid username or password"));
+        HttpResponse response;
+        response.setError(401, "Invalid username or password");
         return response;
     }
     
     // 获取用户信息
     User* user = auth_manager->getUserByUsername(username);
     if (!user) {
-        HttpResponse response(500, "Internal Server Error");
-        response.setJson(buildErrorResponse("Failed to retrieve user information"));
+        HttpResponse response;
+        response.setError(500, "Failed to retrieve user information");
         return response;
     }
     
@@ -130,45 +131,45 @@ HttpResponse AuthRoutes::handleLogin(const HttpRequest& request) {
 
 HttpResponse AuthRoutes::handleRegister(const HttpRequest& request) {
     if (request.method != "POST") {
-        HttpResponse response(405, "Method Not Allowed");
-        response.setJson(buildErrorResponse("Only POST method allowed"));
+        HttpResponse response;
+        response.setError(405, "Only POST method allowed");
         return response;
     }
     
-    // 解析注册数据
-    std:: regex username_regex(R"("username"\s*:\s*"([^"]+)")");
-    std::regex password_regex(R"("password"\s*:\s*"([^"]+)")");
-    std::regex realname_regex(R"("real_name"\s*:\s*"([^"]+)")");
-    std::regex email_regex(R"("email"\s*:\s*"([^"]+)")");
-    std::regex department_regex(R"("department"\s*:\s*"([^"]+)")");
-    std::regex role_regex(R"("role"\s*:\s*"([^"]+)")");
+    // 解析注册数据（使用自定义原始字符串分隔符）
+    std::regex username_regex(R"REGEX("username"\s*:\s*"([^"]+)")REGEX");
+    std::regex password_regex(R"REGEX("password"\s*:\s*"([^"]+)")REGEX");
+    std::regex realname_regex(R"REGEX("real_name"\s*:\s*"([^"]+)")REGEX");
+    std::regex email_regex(R"REGEX("email"\s*:\s*"([^"]+)")REGEX");
+    std::regex department_regex(R"REGEX("department"\s*:\s*"([^"]+)")REGEX");
+    std::regex role_regex(R"REGEX("role"\s*:\s*"([^"]+)")REGEX");
     
     std::smatch matches;
     
-    if (!std::regex_search(request. body, matches, username_regex)) {
-        HttpResponse response(400, "Bad Request");
-        response.setJson(buildErrorResponse("Missing username"));
+    if (!std::regex_search(request.body, matches, username_regex)) {
+        HttpResponse response;
+        response.setError(400, "Missing username");
         return response;
     }
     std::string username = matches[1].str();
     
     if (!std::regex_search(request.body, matches, password_regex)) {
-        HttpResponse response(400, "Bad Request");
-        response.setJson(buildErrorResponse("Missing password"));
+        HttpResponse response;
+        response.setError(400, "Missing password");
         return response;
     }
     std::string password = matches[1].str();
     
     if (!std::regex_search(request.body, matches, realname_regex)) {
-        HttpResponse response(400, "Bad Request");
-        response.setJson(buildErrorResponse("Missing real_name"));
+        HttpResponse response;
+        response.setError(400, "Missing real_name");
         return response;
     }
     std::string real_name = matches[1].str();
     
     if (!std::regex_search(request.body, matches, email_regex)) {
-        HttpResponse response(400, "Bad Request");
-        response.setJson(buildErrorResponse("Missing email"));
+        HttpResponse response;
+        response.setError(400, "Missing email");
         return response;
     }
     std::string email = matches[1].str();
@@ -179,22 +180,37 @@ HttpResponse AuthRoutes::handleRegister(const HttpRequest& request) {
     }
     
     UserRole role = UserRole::STUDENT;
-    if (std:: regex_search(request.body, matches, role_regex)) {
+    if (std::regex_search(request.body, matches, role_regex)) {
         if (matches[1]. str() == "admin") {
-            role = UserRole:: ADMIN;
+            role = UserRole::ADMIN;
         }
     }
     
+    // 业务校验：用户名重复
+    if (User* existing = auth_manager->getUserByUsername(username)) {
+        delete existing; // 释放查询的用户对象
+        HttpResponse response;
+        response.setError(409, "Username already exists");
+        return response;
+    }
+
+    // 业务校验：密码长度
+    if (password.length() < 6) {
+        HttpResponse response;
+        response.setError(400, "Password must be at least 6 characters");
+        return response;
+    }
+
     // 注册用户
     bool success = auth_manager->registerUser(username, password, real_name, email, department, role);
-    
+
     if (success) {
         HttpResponse response(201, "Created");
         response.setJson("{\"success\": true, \"message\": \"User registered successfully\"}");
         return response;
     } else {
-        HttpResponse response(400, "Bad Request");
-        response.setJson(buildErrorResponse("Registration failed"));
+        HttpResponse response;
+        response.setError(400, "Registration failed");
         return response;
     }
 }
@@ -207,14 +223,14 @@ HttpResponse AuthRoutes::handleLogout(const HttpRequest& request) {
 
 HttpResponse AuthRoutes::handleProfile(const HttpRequest& request) {
     // 这个需要认证中间件处理
-    HttpResponse response(501, "Not Implemented");
-    response.setJson(buildErrorResponse("Profile endpoint requires authentication middleware"));
+    HttpResponse response;
+    response.setError(501, "Profile endpoint requires authentication middleware");
     return response;
 }
 
 HttpResponse AuthRoutes:: handleRefreshToken(const HttpRequest& request) {
-    HttpResponse response(501, "Not Implemented");
-    response.setJson(buildErrorResponse("Token refresh not implemented yet"));
+    HttpResponse response;
+    response.setError(501, "Token refresh not implemented yet");
     return response;
 }
 
@@ -224,14 +240,14 @@ AuthenticatedHttpServer::AuthenticatedHttpServer(int server_port)
     : port(server_port), running(false) {
     
     // 初始化所有管理器
-    auth_manager = std:: make_unique<AuthManager>("data/auth. db");
-    auth_middleware = std:: make_unique<AuthMiddleware>(auth_manager.get());
-    auth_routes = std:: make_unique<AuthRoutes>(auth_manager.get());
-    contact_manager = std:: make_unique<ContactManager>("data/contacts.db");
-    activity_manager = std::make_unique<ActivityManager>("data/activities.db");
+        auth_manager.reset(new AuthManager("data/auth.db"));
+    auth_middleware.reset(new AuthMiddleware(auth_manager.get()));
+    auth_routes.reset(new AuthRoutes(auth_manager.get()));
+    contact_manager.reset(new ContactManager("data/contacts.db"));
+    activity_manager.reset(new ActivityManager("data/activities.db"));
     
     std::vector<std::string> resources = {"报告厅", "体育馆", "实验室", "大礼堂", "会议室A", "会议室B"};
-    conflict_detector = std:: make_unique<ConflictDetector>();
+        conflict_detector.reset(new ConflictDetector());
     conflict_detector->initialize(resources);
 }
 
@@ -356,7 +372,7 @@ void AuthenticatedHttpServer::setupRoutes() {
     });
     
     registerProtectedRoute("POST /api/schedule/check-conflict", [this](const AuthenticatedRequest& req) {
-        if (!auth_middleware->authorize(req, UserRole:: ADMIN)) {
+        if (!auth_middleware->authorize(req, UserRole::ADMIN)) {
             HttpResponse response(403, "Forbidden");
             response.setJson(buildErrorResponse("Admin access required"));
             return response;
@@ -374,7 +390,7 @@ bool AuthenticatedHttpServer::start() {
     }
     
     running = true;
-    server_thread = std:: make_unique<std:: thread>(&AuthenticatedHttpServer::serverLoop, this);
+    server_thread.reset(new std::thread(&AuthenticatedHttpServer::serverLoop, this));
     
     std::cout << "🚀 认证HTTP服务器启动成功" << std::endl;
     std::cout << "🌐 访问地址: http://localhost:" << port << std::endl;
@@ -578,11 +594,11 @@ HttpResponse AuthenticatedHttpServer::handleCreateContact(const AuthenticatedReq
         return response;
     }
     
-    // 解析JSON请求体
-    std::regex name_regex(R"("name"\s*:\s*"([^"]+)")");
-    std::regex phone_regex(R"("phone"\s*:\s*"([^"]+)")");
-    std::regex email_regex(R"("email"\s*:\s*"([^"]+)")");
-    std::regex department_regex(R"("department"\s*:\s*"([^"]+)")");
+    // 解析JSON请求体（使用自定义原始字符串分隔符）
+    std::regex name_regex(R"REGEX("name"\s*:\s*"([^"]+)")REGEX");
+    std::regex phone_regex(R"REGEX("phone"\s*:\s*"([^"]+)")REGEX");
+    std::regex email_regex(R"REGEX("email"\s*:\s*"([^"]+)")REGEX");
+    std::regex department_regex(R"REGEX("department"\s*:\s*"([^"]+)")REGEX");
     
     std::smatch matches;
     std::string name, phone, email, department = "";
@@ -639,12 +655,12 @@ HttpResponse AuthenticatedHttpServer::handleCreateActivity(const AuthenticatedRe
         return response;
     }
     
-    // 解析JSON请求体
-    std::regex name_regex(R"("name"\s*:\s*"([^"]+)")");
-    std::regex location_regex(R"("location"\s*:\s*"([^"]+)")");
-    std::regex start_time_regex(R"("start_time"\s*:\s*"([^"]+)")");
-    std::regex end_time_regex(R"("end_time"\s*:\s*"([^"]+)")");
-    std::regex max_participants_regex(R"("max_participants"\s*:\s*(\d+))");
+    // 解析JSON请求体（使用自定义原始字符串分隔符）
+    std::regex name_regex(R"REGEX("name"\s*:\s*"([^"]+)")REGEX");
+    std::regex location_regex(R"REGEX("location"\s*:\s*"([^"]+)")REGEX");
+    std::regex start_time_regex(R"REGEX("start_time"\s*:\s*"([^"]+)")REGEX");
+    std::regex end_time_regex(R"REGEX("end_time"\s*:\s*"([^"]+)")REGEX");
+    std::regex max_participants_regex(R"REGEX("max_participants"\s*:\s*(\d+))REGEX");
     
     std::smatch matches;
     std::string name, location, start_time, end_time;
@@ -727,10 +743,10 @@ HttpResponse AuthenticatedHttpServer::handleCheckConflict(const AuthenticatedReq
         return response;
     }
     
-    // 解析JSON请求体
-    std::regex location_regex(R"("location"\s*:\s*"([^"]+)")");
-    std::regex start_time_regex(R"("start_time"\s*:\s*"([^"]+)")");
-    std::regex end_time_regex(R"("end_time"\s*:\s*"([^"]+)")");
+    // 解析JSON请求体（使用自定义原始字符串分隔符）
+    std::regex location_regex(R"REGEX("location"\s*:\s*"([^"]+)")REGEX");
+    std::regex start_time_regex(R"REGEX("start_time"\s*:\s*"([^"]+)" )REGEX");
+    std::regex end_time_regex(R"REGEX("end_time"\s*:\s*"([^"]+)" )REGEX");
     
     std::smatch matches;
     std::string location, start_time, end_time;
@@ -967,7 +983,7 @@ HttpRequest AuthenticatedHttpServer::parseHttpRequest(const std::string& raw_req
         body_stream << body_line;
         if (!stream.eof()) body_stream << "\n";
     }
-    request. body = body_stream.str();
+    request.body = body_stream.str();
     
     return request;
 }
@@ -977,11 +993,7 @@ std::string AuthenticatedHttpServer::buildHttpResponse(const HttpResponse& respo
     
     oss << "HTTP/1.1 " << response.status_code << " " << response.status_text << "\r\n";
     
-    // 设置CORS头
-    oss << "Access-Control-Allow-Origin: *\r\n";
-    oss << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n";
-    oss << "Access-Control-Allow-Headers: Content-Type, Authorization\r\n";
-    
+    // CORS头已经通过 setCORS() 添加到 response.headers 中了，不要重复添加
     for (const auto& header : response.headers) {
         oss << header.first << ": " << header.second << "\r\n";
     }
