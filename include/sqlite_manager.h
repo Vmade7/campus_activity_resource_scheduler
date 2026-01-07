@@ -66,6 +66,7 @@ public:
     bool deleteActivity(int id);
     
     // 工具
+    const std::string& getDbPath() const; // 提供数据库路径访问器
     void clearAll();
 };
 

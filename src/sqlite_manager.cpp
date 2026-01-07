@@ -70,6 +70,10 @@ bool SQLiteManager::isOpen() const {
     return db != nullptr;
 }
 
+const std::string& SQLiteManager::getDbPath() const {
+    return db_path;
+}
+
 bool SQLiteManager::addContact(const Contact& contact) {
     if (!isOpen()) return false;
     
