@@ -10,6 +10,11 @@
 
 // === AuthMiddleware 实现 ===
 
+// ✅ 新增：定义常数
+const int AuthMiddleware::MAX_LOGIN_ATTEMPTS = 5;
+const int AuthMiddleware::LOCKOUT_DURATION_SECONDS = 300;  // 5分钟
+const int AuthMiddleware::RESET_WINDOW_SECONDS = 3600;      // 1小时
+
 bool AuthMiddleware::authenticate(AuthenticatedRequest& request) {
     std::string token = extractToken(request);
     if (token.empty()) {
@@ -64,6 +69,55 @@ std::string AuthMiddleware::extractToken(const HttpRequest& request) {
     }
     
     return "";
+}
+
+// ✅ 新增：检查登录速率限制
+bool AuthMiddleware::checkRateLimit(const std::string& client_ip, std::string& error_message) {
+    std::lock_guard<std::mutex> lock(rate_limit_mutex);
+    
+    auto now = std::chrono::system_clock::now();
+    
+    // 检查是否在锁定期内
+    auto lockout_it = lockout_time.find(client_ip);
+    if (lockout_it != lockout_time.end()) {
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - lockout_it->second);
+        if (duration.count() < LOCKOUT_DURATION_SECONDS) {
+            int remaining = LOCKOUT_DURATION_SECONDS - duration.count();
+            error_message = "登录次数过多，账户已锁定 " + std::to_string(remaining) + " 秒";
+            return false;  // 仍在锁定期
+        } else {
+            // 锁定期已过，清除锁定
+            lockout_time.erase(lockout_it);
+            login_attempts[client_ip] = 0;
+        }
+    }
+    
+    // 允许访问
+    return true;
+}
+
+// ✅ 新增：记录登录失败
+void AuthMiddleware::recordLoginFailure(const std::string& client_ip) {
+    std::lock_guard<std::mutex> lock(rate_limit_mutex);
+    
+    login_attempts[client_ip]++;
+    
+    std::cout << "登录失败记录: IP=" << client_ip 
+              << " 失败次数=" << login_attempts[client_ip] << std::endl;
+    
+    // 达到最大失败次数，进行锁定
+    if (login_attempts[client_ip] >= MAX_LOGIN_ATTEMPTS) {
+        lockout_time[client_ip] = std::chrono::system_clock::now();
+        std::cout << "警告: IP " << client_ip << " 已被锁定 " << LOCKOUT_DURATION_SECONDS << " 秒" << std::endl;
+    }
+}
+
+// ✅ 新增：清除登录失败记录
+void AuthMiddleware::clearLoginFailure(const std::string& client_ip) {
+    std::lock_guard<std::mutex> lock(rate_limit_mutex);
+    
+    login_attempts[client_ip] = 0;
+    lockout_time.erase(client_ip);
 }
 
 // === AuthRoutes 实现 ===

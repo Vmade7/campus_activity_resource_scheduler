@@ -10,13 +10,18 @@
 
 class ContactManager {
 private: 
-    std::unique_ptr<DataManager> data_manager;      // 数据管理器
+    DataManager* data_manager;                      //改为指针（由外部注入）
     std::unique_ptr<Trie> name_index;              // 姓名前缀搜索索引
     std:: unique_ptr<HashTable> phone_index;        // 电话号码快速查找索引
     
     bool indices_built;                             // 索引是否已构建
 
 public:
+    //接收外部注入的DataManager
+    ContactManager(DataManager* dm,
+                  const std::string& backup_dir = "data/");
+    
+    // 保留向后兼容的构造函数（但标记为deprecated）
     ContactManager(const std::string& db_path = "data/database.db",
                   const std::string& backup_dir = "data/");
     ~ContactManager();

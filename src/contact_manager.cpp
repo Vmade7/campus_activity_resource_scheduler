@@ -3,15 +3,31 @@
 #include <algorithm>
 #include <unordered_map>
 
-ContactManager::ContactManager(const std::string& db_path, const std::string& backup_dir) 
-    : indices_built(false) {
+//新的构造函数：接收外部注入的DataManager
+ContactManager::ContactManager(DataManager* dm, const std::string& backup_dir) 
+    : data_manager(dm), indices_built(false) {
     
-    data_manager.reset(new DataManager(db_path, backup_dir, 100));
+    if (data_manager == nullptr) {
+        std::cerr << "错误: DataManager不能为nullptr!" << std::endl;
+    }
     name_index.reset(new Trie());
     phone_index.reset(new HashTable(64));
 }
 
-ContactManager::~ContactManager() = default;
+// 向后兼容的构造函数（不推荐使用，但保留）
+ContactManager::ContactManager(const std::string& db_path, const std::string& backup_dir) 
+    : indices_built(false) {
+    
+    // 创建新的DataManager（旧方式，应该用新构造函数）
+    std::cerr << "警告: 使用已弃用的ContactManager构造函数！建议改用依赖注入。" << std::endl;
+    data_manager = new DataManager(db_path, backup_dir, 100);
+    name_index.reset(new Trie());
+    phone_index.reset(new HashTable(64));
+}
+
+ContactManager::~ContactManager() {
+    // 注意: 不释放data_manager，因为是外部注入的
+}
 
 bool ContactManager::initialize() {
     std::cout << "初始化联系人管理器..." << std::endl;

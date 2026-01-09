@@ -33,8 +33,7 @@ void PriorityQueue::heapifyDown(int index) {
     size_t leftChild = 2 * index + 1;
     size_t rightChild = 2 * index + 2;
     size_t smallest = index;
-    size_t heapSize = heap.size();
-
+    
     if (leftChild < heap.size() && heap[leftChild] < heap[smallest]) {
         smallest = leftChild;
     }

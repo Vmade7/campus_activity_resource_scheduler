@@ -10,13 +10,18 @@
 
 class ActivityManager {
 private: 
-    std::unique_ptr<DataManager> data_manager;           // 数据管理器
+    DataManager* data_manager;                          // 改为指针（由外部注入）
     std::unique_ptr<SegmentTree> conflict_detector;     // 冲突检测器
     std::map<std::string, std::vector<int>> location_activities;  // 地点-活动映射
     
     bool conflict_detection_enabled;                     // 是否启用冲突检测
 
 public:
+    //接收外部注入的DataManager
+    ActivityManager(DataManager* dm, 
+                   const std::string& backup_dir = "data/");
+    
+    //保留向后兼容的构造函数（但标记为deprecated）
     ActivityManager(const std::string& db_path = "data/database.db",
                    const std::string& backup_dir = "data/");
     ~ActivityManager();

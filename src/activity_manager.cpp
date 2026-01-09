@@ -5,14 +5,29 @@
 #include <chrono>
 #include <iomanip>
 
-ActivityManager::ActivityManager(const std::string& db_path, const std::string& backup_dir)
-    : conflict_detection_enabled(true) {
+// 新的构造函数：接收外部注入的DataManager
+ActivityManager::ActivityManager(DataManager* dm, const std::string& backup_dir)
+    : data_manager(dm), conflict_detection_enabled(true) {
     
-    data_manager.reset(new DataManager(db_path, backup_dir, 100));
+    if (data_manager == nullptr) {
+        std::cerr << "错误: DataManager不能为nullptr!" << std::endl;
+    }
     conflict_detector.reset(new SegmentTree(1440)); // 一天1440分钟
 }
 
-ActivityManager::~ActivityManager() = default;
+ActivityManager::ActivityManager(const std::string& db_path, const std::string& backup_dir)
+    : conflict_detection_enabled(true) {
+    
+    // 创建新的DataManager（旧方式，应该用新构造函数）
+    std::cerr << "警告: 使用已弃用的ActivityManager构造函数！建议改用依赖注入。" << std::endl;
+    data_manager = new DataManager(db_path, backup_dir, 100);
+    conflict_detector.reset(new SegmentTree(1440)); // 一天1440分钟
+}
+
+ActivityManager::~ActivityManager() {
+    // 注意: 不释放data_manager，因为是外部注入的
+    // 如果使用了旧构造函数，调用者需要自己管理生命周期
+}
 
 bool ActivityManager::initialize() {
     std::cout << "初始化活动管理器..." << std::endl;
@@ -319,7 +334,7 @@ void ActivityManager::printScheduleSummary() {
     }
     
     std::cout << "=== 活动日程摘要 ===" << std::endl;
-    std:: cout << "总活动数: " << getTotalCount() << std::endl;
+    std::cout << "总活动数: " << getTotalCount() << std::endl;
     
     auto locationStats = getLocationUsageStats();
     std::cout << "地点使用情况:" << std::endl;

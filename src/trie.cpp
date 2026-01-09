@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <set>
+#include <functional>
 
 Trie::Trie() : contactCount(0) {
     root = new TrieNode();
@@ -144,10 +145,40 @@ std::vector<std::shared_ptr<Contact>> Trie::searchByStudentIdPrefix(const std::s
 }
 
 bool Trie:: deleteContact(int contactId) {
-    // 标记删除（简化实现，实际项目中可能需要从树中完全移除）
-    // 这里我们先实现一个基础版本
-    // TODO: 完整的删除实现会比较复杂，需要重建受影响的路径
-    return false; // 暂时返回false，表示功能待完善
+    // 从整个Trie树中移除指定contactId的联系人
+    bool found = false;
+    
+    // 递归遍历所有节点，从contacts列表中移除该contactId
+    std::function<void(TrieNode*)> removeFromNode = [&](TrieNode* node) {
+        if (!node) return;
+        
+        // 从当前节点的contacts列表中移除
+        auto& contacts = node->contacts;
+        auto it = contacts.begin();
+        while (it != contacts.end()) {
+            if ((*it)->id == contactId) {
+                it = contacts.erase(it);
+                found = true;
+            } else {
+                ++it;
+            }
+        }
+        
+        // 递归处理所有子节点
+        for (auto& child : node->children) {
+            removeFromNode(child.second);
+        }
+    };
+    
+    // 从根节点开始递归删除
+    removeFromNode(root);
+    
+    // 更新contactCount
+    if (found && contactCount > 0) {
+        contactCount--;
+    }
+    
+    return found;
 }
 
 // 辅助函数
