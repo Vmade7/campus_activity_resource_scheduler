@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <random>
+#include <vector>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
@@ -11,7 +12,7 @@
 AuthManager::AuthManager(const std:: string& db_path, const std::string& secret)
     : jwt_secret(secret), token_expire_hours(24) {
     
-    db_manager = std::make_unique<SQLiteManager>(db_path);
+    db_manager.reset(new SQLiteManager(db_path));
 }
 
 AuthManager::~AuthManager() = default;
@@ -332,15 +333,29 @@ void AuthManager::updateLastLogin(int user_id) {
     sqlite3_close(db);
 }
 
-// Base64编码实现（简化版）
+// Base64编码实现
 std::string AuthManager::base64Encode(const std::string& data) {
     BIO* bio = BIO_new(BIO_s_mem());
+    if (!bio) return "";
+    
     BIO* b64 = BIO_new(BIO_f_base64());
+    if (!b64) {
+        BIO_free(bio);
+        return "";
+    }
+    
     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
     bio = BIO_push(b64, bio);
     
-    BIO_write(bio, data. c_str(), data.length());
-    BIO_flush(bio);
+    if (BIO_write(bio, data.c_str(), static_cast<int>(data.length())) <= 0) {
+        BIO_free_all(bio);
+        return "";
+    }
+    
+    if (BIO_flush(bio) <= 0) {
+        BIO_free_all(bio);
+        return "";
+    }
     
     BUF_MEM* buf_mem;
     BIO_get_mem_ptr(bio, &buf_mem);
@@ -362,16 +377,51 @@ void AuthManager::cleanExpiredTokens() {
     }
 }
 
-// 实现 parseJWT（简化版，仅解析载荷）
+// 实现 parseJWT（带签名验证）
 bool AuthManager::parseJWT(const std::string& token, JWTPayload& payload) {
-    // 简化的JWT解析：分割token为三部分
+    // JWT分割为三部分：header.payload.signature
     size_t dot1 = token.find('.');
     if (dot1 == std::string::npos) return false;
     
     size_t dot2 = token.find('.', dot1 + 1);
     if (dot2 == std::string::npos) return false;
     
-    std::string payload_str = base64Decode(token.substr(dot1 + 1, dot2 - dot1 - 1));
+    // 提取三个部分
+    std::string header_b64 = token.substr(0, dot1);
+    std::string payload_b64 = token.substr(dot1 + 1, dot2 - dot1 - 1);
+    std::string signature_b64 = token.substr(dot2 + 1);
+    
+    //新增：验证签名
+    //重新计算签名：HMAC(SHA256, secret, header.payload)
+    std::string data_to_sign = header_b64 + "." + payload_b64;
+    
+    unsigned char* computed_digest;
+    unsigned int digest_len;
+    
+    computed_digest = HMAC(EVP_sha256(), jwt_secret.c_str(), jwt_secret.length(),
+                          reinterpret_cast<const unsigned char*>(data_to_sign.c_str()), 
+                          data_to_sign.length(),
+                          nullptr, &digest_len);
+    
+    std::string computed_signature = base64Encode(std::string(reinterpret_cast<char*>(computed_digest), digest_len));
+    
+    // 比较签名：使用恒定时间比较防止时序攻击
+    if (signature_b64.length() != computed_signature.length()) {
+        return false;
+    }
+    
+    int signature_valid = 0;
+    for (size_t i = 0; i < signature_b64.length(); ++i) {
+        signature_valid |= (signature_b64[i] ^ computed_signature[i]);
+    }
+    
+    if (signature_valid != 0) {
+        std::cerr << "JWT签名验证失败！" << std::endl;
+        return false;  // 签名不匹配
+    }
+    
+    //签名验证通过，继续解析载荷
+    std::string payload_str = base64Decode(payload_b64);
     
     // 简化的JSON解析（提取user_id、username、role、exp）
     size_t user_id_pos = payload_str.find("\"user_id\":");
@@ -407,20 +457,28 @@ bool AuthManager::parseJWT(const std::string& token, JWTPayload& payload) {
     return true;
 }
 
-// 实现 base64Decode（简化版）
+// 实现 base64Decode
 std::string AuthManager::base64Decode(const std::string& data) {
-    BIO* bio = BIO_new_mem_buf(data.c_str(), data.length());
+    BIO* bio = BIO_new_mem_buf(data.c_str(), static_cast<int>(data.length()));
+    if (!bio) return "";
+    
     BIO* b64 = BIO_new(BIO_f_base64());
+    if (!b64) {
+        BIO_free(bio);
+        return "";
+    }
+    
     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
     bio = BIO_push(b64, bio);
     
-    char buffer[data.length()];
-    int decoded_length = BIO_read(bio, buffer, data.length());
+    // 使用 vector 替代 VLA（Variable Length Array）
+    std::vector<char> buffer(data.length() + 1);
+    int decoded_length = BIO_read(bio, buffer.data(), static_cast<int>(data.length()));
     
     BIO_free_all(bio);
     
     if (decoded_length > 0) {
-        return std::string(buffer, decoded_length);
+        return std::string(buffer.data(), decoded_length);
     }
     return "";
 }
